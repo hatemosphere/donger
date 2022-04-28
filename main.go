@@ -4,14 +4,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path"
 	"strings"
 
 	"github.com/gocolly/colly/v2"
+	"github.com/mitchellh/go-homedir"
 )
 
 const (
-	dongerListURL = "http://dongerlist.com/" // Fuck HTTP, but HTTPS does not work on this gods forsaken website for some reason
-	categoryPath  = "category/"
+	dongerListURL  = "http://dongerlist.com/" // Fuck HTTP, but HTTPS does not work on this gods forsaken website for some reason
+	categoryPath   = "category/"
+	dongerFileName = "dongers.json"
 )
 
 // dongerCategory is the container for a dongers of single category
@@ -20,7 +24,7 @@ type dongerCategory struct {
 	Dongers []string
 }
 
-func main() {
+func scrapeDongers() map[string]dongerCategory {
 	dongerCategories := make(map[string]dongerCategory)
 	c := colly.NewCollector()
 	d := c.Clone()
@@ -57,7 +61,39 @@ func main() {
 	})
 
 	c.Visit(dongerListURL)
+	return dongerCategories
+}
 
-	file, _ := json.Marshal(dongerCategories)
-	_ = ioutil.WriteFile("test_dongers.json", file, 0644)
+func main() {
+	// textPtr := flag.String("print", "", "Text to parse. (Required)")
+	// metricPtr := flag.String("print", "random", "Print {random|[category]}")
+	// uniquePtr := flag.Bool("unique", false, "Measure unique values of a metric.")
+
+	homedir, homedirErr := homedir.Dir()
+	if homedirErr != nil {
+		panic(homedirErr)
+	}
+
+	dongersFilePath := path.Join(homedir, ".donger")
+
+	dongerFile, err := os.OpenFile(fmt.Sprint(dongersFilePath+"/"+dongerFileName), os.O_RDWR, 0644)
+	if os.IsNotExist(err) {
+		fmt.Println("Dongers file does not exist and will be generated")
+		dongerCategories := scrapeDongers()
+		mkDirErr := os.MkdirAll(dongersFilePath, os.ModePerm)
+		if mkDirErr != nil {
+			panic(mkDirErr)
+		}
+		file, _ := json.Marshal(dongerCategories)
+		_ = ioutil.WriteFile(fmt.Sprint(dongersFilePath+"/"+dongerFileName), file, 0644)
+		dongerFile, openFileErr := os.OpenFile(fmt.Sprint(dongersFilePath+"/"+dongerFileName), os.O_RDWR, 0644)
+		if openFileErr != nil {
+			panic(mkDirErr)
+		}
+		fmt.Println("Donger file generated")
+		fmt.Println(dongerFile.Name())
+	} else {
+		fmt.Println("Donger file already exists, skipping generation")
+		fmt.Println(dongerFile.Name())
+	}
 }

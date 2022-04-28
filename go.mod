@@ -2,7 +2,10 @@ module github.com/hatemosphere/donger
 
 go 1.18
 
-require github.com/gocolly/colly/v2 v2.1.0
+require (
+	github.com/gocolly/colly/v2 v2.1.0
+	github.com/mitchellh/go-homedir v1.1.0
+)
 
 require (
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
