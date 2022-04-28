@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"strings"
 
 	"github.com/gocolly/colly/v2"
@@ -55,5 +57,7 @@ func main() {
 	})
 
 	c.Visit(dongerListURL)
-	fmt.Println(dongerCategories)
+
+	file, _ := json.Marshal(dongerCategories)
+	_ = ioutil.WriteFile("test_dongers.json", file, 0644)
 }
