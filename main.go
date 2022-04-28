@@ -74,19 +74,20 @@ func main() {
 		panic(homedirErr)
 	}
 
-	dongersFilePath := path.Join(homedir, ".donger")
+	dongersDirPath := path.Join(homedir, ".donger")
+	dongersFilePath := fmt.Sprint(dongersDirPath + "/" + dongerFileName)
 
-	dongerFile, err := os.OpenFile(fmt.Sprint(dongersFilePath+"/"+dongerFileName), os.O_RDWR, 0644)
+	dongerFile, err := os.OpenFile(dongersFilePath, os.O_RDWR, 0644)
 	if os.IsNotExist(err) {
 		fmt.Println("Dongers file does not exist and will be generated")
 		dongerCategories := scrapeDongers()
-		mkDirErr := os.MkdirAll(dongersFilePath, os.ModePerm)
+		mkDirErr := os.MkdirAll(dongersDirPath, os.ModePerm)
 		if mkDirErr != nil {
 			panic(mkDirErr)
 		}
 		file, _ := json.Marshal(dongerCategories)
-		_ = ioutil.WriteFile(fmt.Sprint(dongersFilePath+"/"+dongerFileName), file, 0644)
-		dongerFile, openFileErr := os.OpenFile(fmt.Sprint(dongersFilePath+"/"+dongerFileName), os.O_RDWR, 0644)
+		_ = ioutil.WriteFile(dongersFilePath, file, 0644)
+		dongerFile, openFileErr := os.OpenFile(dongersFilePath, os.O_RDWR, 0644)
 		if openFileErr != nil {
 			panic(mkDirErr)
 		}
