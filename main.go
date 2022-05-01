@@ -4,12 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mitchellh/go-homedir"
+	"golang.design/x/clipboard"
+	"golang.org/x/exp/maps"
 )
 
 const (
@@ -65,6 +69,7 @@ func scrapeDongers() map[string]dongerCategory {
 }
 
 func main() {
+
 	// textPtr := flag.String("print", "", "Text to parse. (Required)")
 	// metricPtr := flag.String("print", "random", "Print {random|[category]}")
 	// uniquePtr := flag.Bool("unique", false, "Measure unique values of a metric.")
@@ -77,24 +82,46 @@ func main() {
 	dongersDirPath := path.Join(homedir, ".donger")
 	dongersFilePath := fmt.Sprint(dongersDirPath + "/" + dongerFileName)
 
-	dongerFile, err := os.OpenFile(dongersFilePath, os.O_RDWR, 0644)
-	if os.IsNotExist(err) {
+	dongerFile, dongerFileOpenErr := os.OpenFile(dongersFilePath, os.O_RDWR, 0644)
+	if os.IsNotExist(dongerFileOpenErr) {
 		fmt.Println("Dongers file does not exist and will be generated")
 		dongerCategories := scrapeDongers()
 		mkDirErr := os.MkdirAll(dongersDirPath, os.ModePerm)
 		if mkDirErr != nil {
 			panic(mkDirErr)
 		}
-		file, _ := json.Marshal(dongerCategories)
-		_ = ioutil.WriteFile(dongersFilePath, file, 0644)
-		dongerFile, openFileErr := os.OpenFile(dongersFilePath, os.O_RDWR, 0644)
-		if openFileErr != nil {
-			panic(mkDirErr)
+		file, dongerMarshalErr := json.Marshal(dongerCategories)
+		if dongerMarshalErr != nil {
+			panic(dongerMarshalErr)
 		}
+		_ = ioutil.WriteFile(dongersFilePath, file, 0644)
 		fmt.Println("Donger file generated")
-		fmt.Println(dongerFile.Name())
 	} else {
 		fmt.Println("Donger file already exists, skipping generation")
-		fmt.Println(dongerFile.Name())
 	}
+
+	dongerFileBytes, dongerFileReadErr := ioutil.ReadAll(dongerFile)
+	if dongerFileReadErr != nil {
+		panic(dongerFileReadErr)
+	}
+
+	dongerCategories := map[string]dongerCategory{}
+	json.Unmarshal([]byte(dongerFileBytes), &dongerCategories)
+
+	dongerCategoriesSlice := maps.Values(dongerCategories)
+	s := rand.NewSource(time.Now().Unix())
+	r := rand.New(s) // initialize local pseudorandom generator
+	randDongerCategoriesSliceElement := r.Intn(len(dongerCategoriesSlice))
+
+	ss := rand.NewSource(time.Now().Unix())
+	rr := rand.New(ss) // initialize local pseudorandom generator
+	dongersSlice := dongerCategoriesSlice[randDongerCategoriesSliceElement].Dongers
+	randDongersSliceElement := rr.Intn(len(dongersSlice))
+	randomDonger := (dongersSlice[randDongersSliceElement])
+
+	clipboardInitErr := clipboard.Init()
+	if clipboardInitErr != nil {
+		panic(clipboardInitErr)
+	}
+	clipboard.Write(clipboard.FmtText, []byte(randomDonger))
 }
