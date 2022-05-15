@@ -13,8 +13,9 @@ import (
 
 	"github.com/gocolly/colly/v2"
 	"github.com/gocolly/colly/v2/debug"
-	"github.com/lukechampine/randmap"
+	randmap "github.com/lukechampine/randmap/safe"
 	"github.com/mitchellh/go-homedir"
+	"golang.design/x/clipboard"
 )
 
 const (
@@ -67,8 +68,12 @@ func randomizeNumber(number int) int {
 
 func choseRandomDonger(chosenDongerCategory string, dongerCategories map[string][]string) string {
 	if chosenDongerCategory == "random" {
+		fmt.Println("chosen category: " + chosenDongerCategory)
 		randomCategory := randmap.Val(dongerCategories).([]string)
+		fmt.Println(randomCategory)
 		randomDongerIndex := randomizeNumber(len(randomCategory))
+		fmt.Println(randomDongerIndex)
+		fmt.Println(randomCategory[randomDongerIndex])
 		return randomCategory[randomDongerIndex]
 	} else {
 		randomDongerIndex := randomizeNumber(len(chosenDongerCategory))
@@ -116,10 +121,10 @@ func main() {
 
 	randomDonger := choseRandomDonger(*dongerChosenCategory, dongerCategories)
 
-	// clipboardInitErr := clipboard.Init()
-	// if clipboardInitErr != nil {
-	// 	panic(clipboardInitErr)
-	// }
-	// clipboard.Write(clipboard.FmtText, []byte(randomDonger))
+	clipboardInitErr := clipboard.Init()
+	if clipboardInitErr != nil {
+		panic(clipboardInitErr)
+	}
+	clipboard.Write(clipboard.FmtText, []byte(randomDonger))
 	fmt.Println("Donger: " + randomDonger + " was chosen and got copied to clipboard")
 }
