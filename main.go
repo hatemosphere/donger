@@ -8,11 +8,11 @@ import (
 	"math/rand"
 	"os"
 	"path"
+	"sort"
 	"strings"
 	"time"
 
 	"github.com/gocolly/colly/v2"
-	"github.com/gocolly/colly/v2/debug"
 	randmap "github.com/lukechampine/randmap/safe"
 	"github.com/mitchellh/go-homedir"
 	"golang.design/x/clipboard"
@@ -26,7 +26,7 @@ const (
 
 func scrapeDongers() map[string][]string {
 	dongerCategories := make(map[string][]string)
-	c := colly.NewCollector(colly.Debugger(&debug.LogDebugger{}))
+	c := colly.NewCollector()
 	d := c.Clone()
 
 	c.OnHTML(`li[class=list-2-item]`, func(e *colly.HTMLElement) {
@@ -54,6 +54,10 @@ func scrapeDongers() map[string][]string {
 	})
 
 	c.Visit(dongerListURL)
+
+	if len(dongerCategories) <= 0 {
+		panic("Dongerlist website flapped, please re-run this program")
+	}
 	return dongerCategories
 }
 
@@ -78,6 +82,7 @@ func choseRandomDonger(chosenDongerCategory string, dongerCategories map[string]
 
 func main() {
 	dongerChosenCategory := flag.String("category", "random", "donger category")
+	listDongerCategory := flag.Bool("list", false, "list all donger categories")
 	flag.Parse()
 
 	var dongerCategories = make(map[string][]string)
@@ -113,12 +118,24 @@ func main() {
 		json.Unmarshal([]byte(dongerFileBytes), &dongerCategories)
 	}
 
-	randomDonger := choseRandomDonger(*dongerChosenCategory, dongerCategories)
+	if *listDongerCategory {
+		dongerCategoriesList := make([]string, len(dongerCategories))
 
-	clipboardInitErr := clipboard.Init()
-	if clipboardInitErr != nil {
-		panic(clipboardInitErr)
+		i := 0
+		for k := range dongerCategories {
+			dongerCategoriesList[i] = k
+			i++
+		}
+		sort.Strings(dongerCategoriesList)
+		fmt.Println(dongerCategoriesList)
+	} else {
+		randomDonger := choseRandomDonger(*dongerChosenCategory, dongerCategories)
+
+		clipboardInitErr := clipboard.Init()
+		if clipboardInitErr != nil {
+			panic(clipboardInitErr)
+		}
+		clipboard.Write(clipboard.FmtText, []byte(randomDonger))
+		fmt.Println("Donger: " + randomDonger + " was chosen and got copied to clipboard")
 	}
-	clipboard.Write(clipboard.FmtText, []byte(randomDonger))
-	fmt.Println("Donger: " + randomDonger + " was chosen and got copied to clipboard")
 }
