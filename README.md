@@ -4,6 +4,14 @@
 
 Simple CLI tool to copy dongers from Dongerlist to clipboard. Should work on all mainstream OS.
 
+### Usage
+
+```bash
+$ donger                        will print random donger from random category
+$ donger -category=CATEGORY     will print random donger from chosen category
+$ donger -list                  will print all available donger categories
+```
+
 ### TODOs
 
 - [x] Marshal map of donger categories to JSON
