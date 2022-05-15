@@ -1,4 +1,4 @@
-## donger cli (WIP)
+## donger cli
 
 ### Description
 
