@@ -2,13 +2,18 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/gocolly/colly/v2"
+	"github.com/gocolly/colly/v2/debug"
+	"github.com/lukechampine/randmap"
 	"github.com/mitchellh/go-homedir"
 )
 
@@ -18,28 +23,14 @@ const (
 	dongerFileName = "dongers.json"
 )
 
-// dongerCategory is the container for a dongers of single category
-// type dongerCategory struct {
-// 	Name    string
-// 	Dongers []string
-// }
-
 func scrapeDongers() map[string][]string {
-	// aminoAcidsToCodons := map[rune]*[]string{}
-	// for codon, aminoAcid := range utils.CodonsToAminoAcid {
-	// 	mappedAminoAcid := aminoAcidsToCodons[aminoAcid]
-	// 	*mappedAminoAcid = append(*mappedAminoAcid, codon)
-	// }
 	dongerCategories := make(map[string][]string)
-	c := colly.NewCollector()
+	c := colly.NewCollector(colly.Debugger(&debug.LogDebugger{}))
 	d := c.Clone()
 
 	c.OnHTML(`li[class=list-2-item]`, func(e *colly.HTMLElement) {
 		e.ForEach("a[href]", func(_ int, el *colly.HTMLElement) {
 			if strings.HasPrefix(el.Attr("href"), fmt.Sprint(dongerListURL+categoryPath)) {
-				// dongerCategories[el.Attr("href")] = dongerCategory{
-				// 	Name: el.Text,
-				// }
 				d.Visit(e.Request.AbsoluteURL(el.Attr("href")))
 			}
 		})
@@ -67,13 +58,30 @@ func scrapeDongers() map[string][]string {
 	return dongerCategories
 }
 
-func main() {
-	var dongerCategories = make(map[string][]string)
-	// fmt.Println(dongerCategories)
+func randomizeNumber(number int) int {
+	randomSource := rand.NewSource(time.Now().Unix())
+	randomizer := rand.New(randomSource) // initialize local pseudorandom generator
+	randomNumber := randomizer.Intn(number)
+	return randomNumber
+}
 
-	// textPtr := flag.String("print", "", "Text to parse. (Required)")
-	// metricPtr := flag.String("print", "random", "Print {random|[category]}")
-	// uniquePtr := flag.Bool("unique", false, "Measure unique values of a metric.")
+func choseRandomDonger(chosenDongerCategory string, dongerCategories map[string][]string) string {
+	if chosenDongerCategory == "random" {
+		randomCategory := randmap.Val(dongerCategories).([]string)
+		randomDongerIndex := randomizeNumber(len(randomCategory))
+		return randomCategory[randomDongerIndex]
+	} else {
+		randomDongerIndex := randomizeNumber(len(chosenDongerCategory))
+		dongerList := dongerCategories[chosenDongerCategory]
+		return dongerList[randomDongerIndex]
+	}
+}
+
+func main() {
+	dongerChosenCategory := flag.String("category", "random", "donger category")
+	flag.Parse()
+
+	var dongerCategories = make(map[string][]string)
 
 	homedir, homedirErr := homedir.Dir()
 	if homedirErr != nil {
@@ -105,22 +113,13 @@ func main() {
 		fmt.Println("Donger file already exists, skipping generation")
 		json.Unmarshal([]byte(dongerFileBytes), &dongerCategories)
 	}
-	fmt.Println(dongerCategories)
 
-	// dongerCategoriesSlice := maps.Values(dongerCategories)
-	// s := rand.NewSource(time.Now().Unix())
-	// r := rand.New(s) // initialize local pseudorandom generator
-	// randDongerCategoriesSliceElement := r.Intn(len(dongerCategoriesSlice))
-
-	// ss := rand.NewSource(time.Now().Unix())
-	// rr := rand.New(ss) // initialize local pseudorandom generator
-	// dongersSlice := dongerCategoriesSlice[randDongerCategoriesSliceElement].Dongers
-	// randDongersSliceElement := rr.Intn(len(dongersSlice))
-	// randomDonger := (dongersSlice[randDongersSliceElement])
+	randomDonger := choseRandomDonger(*dongerChosenCategory, dongerCategories)
 
 	// clipboardInitErr := clipboard.Init()
 	// if clipboardInitErr != nil {
 	// 	panic(clipboardInitErr)
 	// }
 	// clipboard.Write(clipboard.FmtText, []byte(randomDonger))
+	fmt.Println("Donger: " + randomDonger + " was chosen and got copied to clipboard")
 }
