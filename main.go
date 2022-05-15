@@ -38,8 +38,6 @@ func scrapeDongers() map[string][]string {
 	})
 
 	d.OnHTML(`ul[class=list-1]`, func(e *colly.HTMLElement) {
-
-		// dongers := []string{}
 		e.ForEach(`textarea[class=donger]`, func(_ int, el *colly.HTMLElement) {
 			dongerCategoryName := strings.TrimPrefix(e.Request.URL.String(), fmt.Sprint(dongerListURL+categoryPath))
 			dongerCategories[dongerCategoryName] = append(dongerCategories[dongerCategoryName], el.Text)
@@ -68,12 +66,8 @@ func randomizeNumber(number int) int {
 
 func choseRandomDonger(chosenDongerCategory string, dongerCategories map[string][]string) string {
 	if chosenDongerCategory == "random" {
-		fmt.Println("chosen category: " + chosenDongerCategory)
 		randomCategory := randmap.Val(dongerCategories).([]string)
-		fmt.Println(randomCategory)
 		randomDongerIndex := randomizeNumber(len(randomCategory))
-		fmt.Println(randomDongerIndex)
-		fmt.Println(randomCategory[randomDongerIndex])
 		return randomCategory[randomDongerIndex]
 	} else {
 		randomDongerIndex := randomizeNumber(len(chosenDongerCategory))
