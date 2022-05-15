@@ -2,7 +2,7 @@
 
 ### Description
 
-Simple CLI tool to print dongers from Donger List. Should 
+Simple CLI tool to copy dongers from Dongerlist to clipboard. Should work on all mainstream OS.
 
 ### TODOs
 
