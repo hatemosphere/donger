@@ -1,5 +1,7 @@
 ## donger cli
 
+History of donger phenomenon - https://knowyourmeme.com/memes/raise-your-dongers
+
 ### Description
 
 Simple CLI tool to copy dongers from Dongerlist to clipboard. Should work on all mainstream OS.
