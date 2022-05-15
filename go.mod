@@ -5,8 +5,6 @@ go 1.18
 require (
 	github.com/gocolly/colly/v2 v2.1.0
 	github.com/mitchellh/go-homedir v1.1.0
-	golang.design/x/clipboard v0.6.2
-	golang.org/x/exp v0.0.0-20220428152302-39d4317da171
 )
 
 require (
@@ -21,12 +19,9 @@ require (
 	github.com/kennygrant/sanitize v1.2.4 // indirect
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
 	github.com/temoto/robotstxt v1.1.1 // indirect
-	golang.org/x/exp/shiny v0.0.0-20220428152302-39d4317da171 // indirect
-	golang.org/x/image v0.0.0-20211028202545-6944b10bf410 // indirect
-	golang.org/x/mobile v0.0.0-20210716004757-34ab1303b554 // indirect
 	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4 // indirect
-	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654 // indirect
 	golang.org/x/text v0.3.6 // indirect
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/protobuf v1.24.0 // indirect
 )

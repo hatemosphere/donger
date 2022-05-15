@@ -4,16 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"path"
 	"strings"
-	"time"
 
 	"github.com/gocolly/colly/v2"
 	"github.com/mitchellh/go-homedir"
-	"golang.design/x/clipboard"
-	"golang.org/x/exp/maps"
 )
 
 const (
@@ -23,37 +19,40 @@ const (
 )
 
 // dongerCategory is the container for a dongers of single category
-type dongerCategory struct {
-	Name    string
-	Dongers []string
-}
+// type dongerCategory struct {
+// 	Name    string
+// 	Dongers []string
+// }
 
-func scrapeDongers() map[string]dongerCategory {
-	dongerCategories := make(map[string]dongerCategory)
+func scrapeDongers() map[string][]string {
+	// aminoAcidsToCodons := map[rune]*[]string{}
+	// for codon, aminoAcid := range utils.CodonsToAminoAcid {
+	// 	mappedAminoAcid := aminoAcidsToCodons[aminoAcid]
+	// 	*mappedAminoAcid = append(*mappedAminoAcid, codon)
+	// }
+	dongerCategories := make(map[string][]string)
 	c := colly.NewCollector()
 	d := c.Clone()
 
 	c.OnHTML(`li[class=list-2-item]`, func(e *colly.HTMLElement) {
 		e.ForEach("a[href]", func(_ int, el *colly.HTMLElement) {
 			if strings.HasPrefix(el.Attr("href"), fmt.Sprint(dongerListURL+categoryPath)) {
-				dongerCategories[el.Attr("href")] = dongerCategory{
-					Name: el.Text,
-				}
+				// dongerCategories[el.Attr("href")] = dongerCategory{
+				// 	Name: el.Text,
+				// }
 				d.Visit(e.Request.AbsoluteURL(el.Attr("href")))
 			}
 		})
 	})
 
 	d.OnHTML(`ul[class=list-1]`, func(e *colly.HTMLElement) {
-		dongers := []string{}
+
+		// dongers := []string{}
 		e.ForEach(`textarea[class=donger]`, func(_ int, el *colly.HTMLElement) {
-			dongers = append(dongers, el.Text)
+			dongerCategoryName := strings.TrimPrefix(e.Request.URL.String(), fmt.Sprint(dongerListURL+categoryPath))
+			dongerCategories[dongerCategoryName] = append(dongerCategories[dongerCategoryName], el.Text)
+
 		})
-		// Elegant way to change single value of struct, having map of structs, by Stack Overflow
-		if entry, ok := dongerCategories[e.Request.URL.String()]; ok {
-			entry.Dongers = dongers
-			dongerCategories[e.Request.URL.String()] = entry
-		}
 	})
 
 	c.OnRequest(func(r *colly.Request) {
@@ -69,6 +68,8 @@ func scrapeDongers() map[string]dongerCategory {
 }
 
 func main() {
+	var dongerCategories = make(map[string][]string)
+	// fmt.Println(dongerCategories)
 
 	// textPtr := flag.String("print", "", "Text to parse. (Required)")
 	// metricPtr := flag.String("print", "random", "Print {random|[category]}")
@@ -85,7 +86,7 @@ func main() {
 	dongerFile, dongerFileOpenErr := os.OpenFile(dongersFilePath, os.O_RDWR, 0644)
 	if os.IsNotExist(dongerFileOpenErr) {
 		fmt.Println("Dongers file does not exist and will be generated")
-		dongerCategories := scrapeDongers()
+		dongerCategories = scrapeDongers()
 		mkDirErr := os.MkdirAll(dongersDirPath, os.ModePerm)
 		if mkDirErr != nil {
 			panic(mkDirErr)
@@ -97,31 +98,29 @@ func main() {
 		_ = ioutil.WriteFile(dongersFilePath, file, 0644)
 		fmt.Println("Donger file generated")
 	} else {
+		dongerFileBytes, dongerFileReadErr := ioutil.ReadAll(dongerFile)
+		if dongerFileReadErr != nil {
+			panic(dongerFileReadErr)
+		}
 		fmt.Println("Donger file already exists, skipping generation")
+		json.Unmarshal([]byte(dongerFileBytes), &dongerCategories)
 	}
+	fmt.Println(dongerCategories)
 
-	dongerFileBytes, dongerFileReadErr := ioutil.ReadAll(dongerFile)
-	if dongerFileReadErr != nil {
-		panic(dongerFileReadErr)
-	}
+	// dongerCategoriesSlice := maps.Values(dongerCategories)
+	// s := rand.NewSource(time.Now().Unix())
+	// r := rand.New(s) // initialize local pseudorandom generator
+	// randDongerCategoriesSliceElement := r.Intn(len(dongerCategoriesSlice))
 
-	dongerCategories := map[string]dongerCategory{}
-	json.Unmarshal([]byte(dongerFileBytes), &dongerCategories)
+	// ss := rand.NewSource(time.Now().Unix())
+	// rr := rand.New(ss) // initialize local pseudorandom generator
+	// dongersSlice := dongerCategoriesSlice[randDongerCategoriesSliceElement].Dongers
+	// randDongersSliceElement := rr.Intn(len(dongersSlice))
+	// randomDonger := (dongersSlice[randDongersSliceElement])
 
-	dongerCategoriesSlice := maps.Values(dongerCategories)
-	s := rand.NewSource(time.Now().Unix())
-	r := rand.New(s) // initialize local pseudorandom generator
-	randDongerCategoriesSliceElement := r.Intn(len(dongerCategoriesSlice))
-
-	ss := rand.NewSource(time.Now().Unix())
-	rr := rand.New(ss) // initialize local pseudorandom generator
-	dongersSlice := dongerCategoriesSlice[randDongerCategoriesSliceElement].Dongers
-	randDongersSliceElement := rr.Intn(len(dongersSlice))
-	randomDonger := (dongersSlice[randDongersSliceElement])
-
-	clipboardInitErr := clipboard.Init()
-	if clipboardInitErr != nil {
-		panic(clipboardInitErr)
-	}
-	clipboard.Write(clipboard.FmtText, []byte(randomDonger))
+	// clipboardInitErr := clipboard.Init()
+	// if clipboardInitErr != nil {
+	// 	panic(clipboardInitErr)
+	// }
+	// clipboard.Write(clipboard.FmtText, []byte(randomDonger))
 }
